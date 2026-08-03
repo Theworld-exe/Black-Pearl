@@ -13,12 +13,12 @@ export default function GameHeader({ selectedGame, steamData, currentTheme, isDo
     <div className="relative pb-12 px-12 shrink-0 w-full min-h-[55vh] flex flex-col justify-end transition-all duration-300 pt-32">
       <div className="absolute inset-0 overflow-hidden">
         <motion.img initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} exit={{ opacity: 0 }} src={selectedGame.thumbnail_link} className="w-full h-full object-cover scale-105 blur-[16px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/90 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#030303] via-[#030303]/90 to-transparent" />
       </div>
 
       <div className="relative z-10 flex gap-10 items-end w-full max-w-[1400px] mx-auto mt-auto">
         <div className="relative shrink-0 z-20">
-           <motion.img layoutId={`img-${selectedGame.name}`} src={selectedGame.thumbnail_link} className="w-64 rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.9)] border border-white/10 bg-black aspect-[3/4] object-cover" />
+           <motion.img layoutId={`img-${selectedGame.name}`} src={selectedGame.thumbnail_link} className="w-64 rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.9)] border border-white/10 bg-black aspect-3/4 object-cover" />
            {selectedGame.tag && (
               <div className="absolute top-3 left-3 bg-red-600 text-white font-black px-3 py-1 rounded shadow-lg shadow-red-900/50 uppercase tracking-widest text-xs z-30">
                 {selectedGame.tag}

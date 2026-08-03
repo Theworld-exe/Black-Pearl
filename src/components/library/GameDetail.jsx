@@ -22,6 +22,7 @@ export default function GameDetail({
   setLibrary,
   runningGames,
   setRunningGames,
+  setToast,
 }) {
   const [steamData, setSteamData] = useState(null);
   const [steamLoading, setSteamLoading] = useState(true);
@@ -41,10 +42,15 @@ export default function GameDetail({
   useEffect(() => {
     const fetchSteam = async () => {
       setSteamLoading(true);
-      const searchName = selectedGame.clean_name || selectedGame.name;
-      const data = await window.api.getSteamMedia(searchName);
-      setSteamData(data);
-      setSteamLoading(false);
+      try {
+        const searchName = selectedGame.clean_name || selectedGame.name;
+        const data = await window.api.getSteamMedia(searchName);
+        setSteamData(data);
+      } catch (e) {
+        console.error("Failed to fetch Steam data", e);
+      } finally {
+        setSteamLoading(false);
+      }
     };
     if (selectedGame) fetchSteam();
   }, [selectedGame]);
@@ -60,10 +66,11 @@ export default function GameDetail({
         try {
           const details = await window.api.getGameDetails(selectedGame.url);
           setDownloadLinks(details.download_links || []);
-          setSelectedGame((prev) => ({
-            ...prev,
-            download_links: details.download_links || [],
-          }));
+          // Guard against re-opening the panel if the user closed it during fetch
+          setSelectedGame((prev) => {
+            if (!prev) return prev;
+            return { ...prev, download_links: details.download_links || [] };
+          });
         } catch (e) {
           console.error("Failed to fetch links", e);
         } finally {
@@ -81,9 +88,22 @@ export default function GameDetail({
       if (!window.api.checkPartExists) return;
       const status = {};
       for (let i = 0; i < downloadLinks.length; i++) {
-        const link = downloadLinks[i];
+        const originalLink = downloadLinks[i];
+        const link =
+          Array.isArray(originalLink) && originalLink.length === 1
+            ? originalLink[0]
+            : originalLink;
+
         if (typeof link === "string") {
           status[`${i}`] = await window.api.checkPartExists(link);
+        } else if (Array.isArray(link)) {
+          for (let pIdx = 0; pIdx < link.length; pIdx++) {
+            if (typeof link[pIdx] === "string") {
+              status[`${i}-${pIdx}`] = await window.api.checkPartExists(
+                link[pIdx],
+              );
+            }
+          }
         }
       }
       setDownloadedParts(status);
@@ -113,7 +133,10 @@ export default function GameDetail({
       libraryEntry.launchParams || "",
     );
     setLaunching(false);
-    if (!result.success) alert(`Failed to launch: ${result.message}`);
+    if (!result.success) {
+      setToast(`Launch failed: ${result.message}`);
+      setTimeout(() => setToast(null), 5000);
+    }
   };
 
   const handleKillGame = async () => {

@@ -17,7 +17,7 @@ export default function GameCard({
       onClick={() => openGame(game)}
       className="group cursor-pointer flex flex-col gap-3"
     >
-      <div className="relative rounded-2xl overflow-hidden aspect-[3/4] bg-black/40 border border-white/10 hover:border-white/30 transition-all duration-300 shadow-xl">
+      <div className="relative rounded-2xl overflow-hidden aspect-3/4 bg-black/40 border border-white/10 hover:border-white/30 transition-all duration-300 shadow-xl">
         <motion.img
           layoutId={`img-${game.name}`}
           src={game.thumbnail_link}
@@ -38,11 +38,11 @@ export default function GameCard({
         )}
 
         {activeDl ? (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-[4px] flex items-center justify-center z-10 transition-all">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center z-10 transition-all">
             {activeDlProgress === 0 ? (
               <div className="flex flex-col items-center justify-center">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-3" />
-                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse text-center px-2">
+                <span className={`text-[10px] font-black uppercase tracking-widest animate-pulse text-center px-2 ${currentTheme.iconColor}`}>
                   Preparing<br />Download...
                 </span>
               </div>
@@ -64,8 +64,8 @@ export default function GameCard({
             )}
           </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-            <span className={`text-xs font-bold text-white px-3 py-1.5 rounded-lg shadow-lg bg-gradient-to-r ${currentTheme.textGradient}`}>
+          <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+            <span className={`text-xs font-bold text-white px-3 py-1.5 rounded-lg shadow-lg bg-linear-to-r ${currentTheme.textGradient}`}>
               VIEW DETAILS
             </span>
           </div>

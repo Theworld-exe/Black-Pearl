@@ -22,7 +22,7 @@ export default function TopNav({
         {selectedGame.url && (
            <button
              onClick={() => window.api.openExternal(selectedGame.url)}
-             className="flex items-center justify-center w-[46px] h-[46px] rounded-full bg-black/40 backdrop-blur-3xl border border-white/10 hover:bg-blue-600/50 hover:border-blue-500 hover:text-white transition-all text-gray-200"
+             className="flex items-center justify-center w-[46px] h-[46px] rounded-full bg-black/40 backdrop-blur-3xl border border-white/10 hover:bg-white/15 hover:border-white/30 hover:text-white transition-all text-gray-200"
              title="Open in Default Browser"
            >
              <ExternalLink size={18} />

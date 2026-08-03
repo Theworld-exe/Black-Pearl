@@ -3,9 +3,9 @@ import { HardDrive } from "lucide-react";
 export default function SystemReqs({ steamData, steamLoading, currentTheme }) {
   return (
     <div className="flex-1 min-w-0">
-      <div className="bg-black/40 backdrop-blur-[40px] border border-white/10 p-10 rounded-3xl relative overflow-hidden shadow-2xl">
-        <div className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${currentTheme.textGradient}`} />
-        <h3 className={`text-xl font-black mb-8 flex items-center gap-3 uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.textGradient}`}>
+      <div className="bg-black/40 backdrop-blur-2xl border border-white/10 p-10 rounded-3xl relative overflow-hidden shadow-2xl">
+        <div className={`absolute top-0 left-0 w-1.5 h-full bg-linear-to-b ${currentTheme.textGradient}`} />
+        <h3 className={`text-xl font-black mb-8 flex items-center gap-3 uppercase tracking-widest bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}>
           <HardDrive className={currentTheme.iconColor} size={24} /> System Requirements
         </h3>
         {steamLoading ? (

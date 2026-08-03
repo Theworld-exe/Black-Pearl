@@ -22,7 +22,7 @@ export default function MediaGallery({
       <div className="relative z-10 bg-[#030303] w-full pt-10 pb-8 border-b border-white/5">
         <div className="max-w-[1400px] mx-auto w-full px-12">
           <h2
-            className={`flex items-center gap-3 text-2xl font-black mb-6 uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.textGradient}`}
+            className={`flex items-center gap-3 text-2xl font-black mb-6 uppercase tracking-widest bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
           >
             <PlaySquare className={currentTheme.iconColor} /> Media Gallery
           </h2>
@@ -91,10 +91,10 @@ export default function MediaGallery({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-black/40 backdrop-blur-[40px] border border-white/10 p-10 rounded-3xl w-full shadow-2xl"
+              className="bg-black/40 backdrop-blur-2xl border border-white/10 p-10 rounded-3xl w-full shadow-2xl"
             >
               <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-white uppercase tracking-widest">
-                <Info className="text-gray-400" size={24} /> About Game
+                <Info className={currentTheme.iconColor} size={24} /> About Game
               </h3>
               <p
                 dangerouslySetInnerHTML={{

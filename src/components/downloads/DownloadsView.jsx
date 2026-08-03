@@ -31,7 +31,7 @@ export default function DownloadsView({
     <div className="p-8 w-full max-w-5xl mx-auto flex flex-col gap-10">
       <div>
         <h2
-          className={`text-3xl font-black mb-6 flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.textGradient}`}
+          className={`text-3xl font-black mb-6 flex items-center gap-3 bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
         >
           <Download className={currentTheme.iconColor} /> Active Downloads
         </h2>
@@ -67,7 +67,7 @@ export default function DownloadsView({
                     </h4>
 
                     {isPreparing ? (
-                      <span className="font-mono text-xs font-black text-blue-400 animate-pulse shrink-0 uppercase tracking-widest">
+                      <span className={`font-mono text-xs font-black animate-pulse shrink-0 uppercase tracking-widest ${currentTheme.iconColor}`}>
                         Preparing...
                       </span>
                     ) : (
@@ -178,34 +178,42 @@ export default function DownloadsView({
       <div>
         <div className="flex justify-between items-center mb-6">
           <h2
-            className={`text-2xl font-black flex items-center gap-3 text-gray-300`}
+            className={`text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
           >
-            <CheckCircle /> Completed Downloads
+            <CheckCircle className={currentTheme.iconColor} /> Completed Downloads
           </h2>
-          <button
-            onClick={() =>
-              window.api.clearCompleted().then(() => setCompletedDownloads([]))
-            }
-            className="text-xs bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg font-bold text-gray-300 transition-colors"
-          >
-            Clear History
-          </button>
-        </div>
-        <div className="flex flex-col gap-3">
-          {completedDownloads.map((c) => (
-            <div
-              key={c.gid}
-              className="bg-black/40 backdrop-blur-3xl border border-white/10 p-5 rounded-xl flex justify-between items-center hover:bg-black/60 transition-colors"
+          {completedDownloads.length > 0 && (
+            <button
+              onClick={() =>
+                window.api.clearCompleted().then(() => setCompletedDownloads([]))
+              }
+              className="text-xs bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg font-bold text-gray-300 transition-colors border border-white/5"
             >
-              <span className="truncate pr-4 font-bold text-gray-100">
-                {c.gameName || c.name}
-              </span>
-              <span className="text-xs text-green-400 font-black tracking-widest uppercase bg-green-400/10 px-3 py-1 rounded-md">
-                Completed
-              </span>
-            </div>
-          ))}
+              Clear History
+            </button>
+          )}
         </div>
+        {completedDownloads.length === 0 ? (
+          <p className="text-gray-400 italic bg-black/40 backdrop-blur-3xl border border-white/10 p-6 rounded-2xl">
+            No completed downloads yet.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {completedDownloads.map((c, i) => (
+              <div
+                key={c.gid || c.name || i}
+                className="bg-black/40 backdrop-blur-3xl border border-white/10 p-5 rounded-xl flex justify-between items-center hover:bg-black/60 transition-colors"
+              >
+                <span className="truncate pr-4 font-bold text-gray-100">
+                  {c.gameName || c.name}
+                </span>
+                <span className="text-xs text-green-400 font-black tracking-widest uppercase bg-green-400/10 px-3 py-1 rounded-md border border-green-400/20">
+                  Completed
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

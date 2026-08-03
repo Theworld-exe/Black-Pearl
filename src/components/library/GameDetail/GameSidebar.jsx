@@ -19,16 +19,18 @@ export default function GameSidebar({
   return (
     <div className="w-[450px] shrink-0 flex flex-col gap-4">
       {showControls && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`bg-black/40 backdrop-blur-[40px] border p-8 rounded-3xl relative overflow-hidden shadow-2xl ${isRunning ? "border-green-500/40 shadow-green-500/10" : "border-white/10"}`}>
-          <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${isRunning ? "from-green-500 to-emerald-400" : currentTheme.textGradient}`} />
-          <h3 className={`text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r ${isRunning ? "from-green-400 to-emerald-300" : currentTheme.textGradient}`}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`bg-black/40 backdrop-blur-2xl border p-8 rounded-3xl relative overflow-hidden shadow-2xl ${isRunning ? "border-green-500/40 shadow-green-500/10" : "border-white/10"}`}>
+          <div className={`absolute top-0 left-0 w-full h-1.5 bg-linear-to-r ${isRunning ? "from-green-500 to-emerald-400" : currentTheme.textGradient}`} />
+          <h3 className={`text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-widest bg-clip-text text-transparent bg-linear-to-r ${isRunning ? "from-green-400 to-emerald-300" : currentTheme.textGradient}`}>
             <Gamepad2 className={isRunning ? "text-green-400" : currentTheme.iconColor} size={24} /> Game Controls
           </h3>
           <div className="flex flex-col gap-3">
-            <button onClick={() => window.api.openGameFolder(libraryEntry?.exePath)} className="flex items-center justify-between bg-black/60 border border-white/5 p-4 rounded-xl hover:bg-white/10 transition-all text-left group">
-              <span className="text-sm font-bold text-gray-200 group-hover:text-white">Open Game Folder</span>
-              <FolderOpen size={18} className={`text-gray-400 group-hover:${currentTheme.iconColor} transition-colors`} />
-            </button>
+            {libraryEntry?.exePath && (
+              <button onClick={() => window.api.openGameFolder(libraryEntry.exePath)} className="flex items-center justify-between bg-black/60 border border-white/5 p-4 rounded-xl hover:bg-white/10 transition-all text-left group">
+                <span className="text-sm font-bold text-gray-200 group-hover:text-white">Open Game Folder</span>
+                <FolderOpen size={18} className="text-gray-400 group-hover:text-white transition-colors" />
+              </button>
+            )}
 
             {!hasExe ? (
               <button onClick={handleChooseLauncher} className="flex items-center justify-center gap-3 p-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all border border-dashed border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white">
@@ -72,9 +74,9 @@ export default function GameSidebar({
         </motion.div>
       )}
 
-      <div className="bg-black/40 backdrop-blur-[40px] border border-white/10 p-8 rounded-3xl relative overflow-hidden shadow-2xl">
-        <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${currentTheme.textGradient}`} />
-        <h3 className={`text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.textGradient}`}>
+      <div className="bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl relative overflow-hidden shadow-2xl">
+        <div className={`absolute top-0 left-0 w-full h-1.5 bg-linear-to-r ${currentTheme.textGradient}`} />
+        <h3 className={`text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-widest bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}>
           <Download className={currentTheme.iconColor} size={24} /> Direct Links
         </h3>
         
@@ -120,7 +122,7 @@ export default function GameSidebar({
                              {link.map((partUrl, pIdx) => {
                                 const isPartDone = downloadedParts[`${i}-${pIdx}`];
                                 return (
-                                  <button key={pIdx} onClick={() => handleDownload(partUrl)} className={`flex items-center justify-center gap-2 p-2.5 rounded-lg text-xs font-bold transition-all border ${isPartDone ? "bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30" : `bg-white/5 hover:${currentTheme.activeBg} hover:text-black border-white/5 hover:border-transparent text-gray-300`}`}>
+                                  <button key={pIdx} onClick={() => handleDownload(partUrl)} className={`flex items-center justify-center gap-2 p-2.5 rounded-lg text-xs font-bold transition-all border ${isPartDone ? "bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30" : "bg-white/5 hover:bg-white/15 border-white/5 hover:border-white/15 text-gray-300 hover:text-white"}`}>
                                     {isPartDone ? <CheckCircle size={14} /> : <Download size={14} />} Part {pIdx + 1}
                                   </button>
                                 )
@@ -128,7 +130,7 @@ export default function GameSidebar({
                            </div>
                            {!allPartsDone && (
                              <div className="p-3 border-t border-white/5 flex justify-end">
-                               <button onClick={() => handleDownload(link)} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold text-xs shadow-lg">
+                               <button onClick={() => handleDownload(link)} className={`px-4 py-2 ${currentTheme.color} hover:brightness-110 text-black rounded-lg font-bold text-xs shadow-lg transition-all`}>
                                  Download Missing Parts
                                </button>
                              </div>
@@ -163,7 +165,7 @@ export default function GameSidebar({
                     <span className={`truncate text-[15px] font-bold uppercase tracking-wider transition-colors ${isPartDone ? "text-green-400" : "text-gray-200 group-hover:text-white"}`}>
                       {hostname}
                     </span>
-                    <div className={`${isPartDone ? "bg-green-500/20 text-green-400 border border-green-500/40" : `bg-white/5 border border-white/5 text-gray-400 group-hover:${currentTheme.activeBg} group-hover:text-black`} p-2.5 rounded-xl transition-colors`}>
+                    <div className={`${isPartDone ? "bg-green-500/20 text-green-400 border border-green-500/40" : "bg-white/5 border border-white/5 text-gray-400 group-hover:bg-white/15 group-hover:text-white"} p-2.5 rounded-xl transition-colors`}>
                       {isPartDone ? <CheckCircle size={18} /> : <Download size={18} />}
                     </div>
                   </button>

@@ -52,7 +52,7 @@ export default function ProfileMenu({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute right-0 top-14 w-48 bg-[#050505]/70 backdrop-blur-[50px] border border-white/10 rounded-2xl p-2 shadow-[0_10px_40px_rgba(0,0,0,0.9)] flex flex-col gap-1 z-[100]"
+            className="absolute right-0 top-14 w-48 bg-[#050505]/70 backdrop-blur-3xl border border-white/10 rounded-2xl p-2 shadow-[0_10px_40px_rgba(0,0,0,0.9)] flex flex-col gap-1 z-100"
           >
             {items.map(({ icon: Icon, label, view }) => (
               <button

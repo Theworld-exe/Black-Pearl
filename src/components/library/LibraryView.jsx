@@ -1,6 +1,6 @@
 // Renders the user's game library with launcher status and remove option.
 import { motion } from "framer-motion";
-import { BookOpen, Trash2, Gamepad2, FolderOpen } from "lucide-react";
+import { BookOpen, Trash2, Gamepad2 } from "lucide-react";
 
 export default function LibraryView({
   library,
@@ -13,7 +13,7 @@ export default function LibraryView({
     <div className="p-8 w-full">
       <div className="flex items-center gap-4 mb-8">
         <h2
-          className={`text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.textGradient}`}
+          className={`text-3xl font-black bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
         >
           <BookOpen className="inline mb-1 mr-2" size={28} />
           Library
@@ -48,7 +48,7 @@ export default function LibraryView({
               >
                 <div
                   onClick={() => openGame(game)}
-                  className={`relative rounded-2xl overflow-hidden aspect-[3/4] bg-black/40 border transition-all duration-300 cursor-pointer shadow-xl ${
+                  className={`relative rounded-2xl overflow-hidden aspect-3/4 bg-black/40 border transition-all duration-300 cursor-pointer shadow-xl ${
                     isRunning
                       ? "border-green-500/60 shadow-green-500/20"
                       : "border-white/10 hover:border-white/30"
@@ -82,9 +82,9 @@ export default function LibraryView({
 
                   {/* Hover overlay */}
                   {!isRunning && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                    <div className="absolute inset-0 bg-linear-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
                       <span
-                        className={`text-[10px] font-bold text-white px-2.5 py-1.5 rounded-lg bg-gradient-to-r ${currentTheme.textGradient}`}
+                        className={`text-[10px] font-bold text-white px-2.5 py-1.5 rounded-lg bg-linear-to-r ${currentTheme.textGradient}`}
                       >
                         {game.exePath ? "▶ PLAY" : "OPEN"}
                       </span>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AnimatePresence, MotionConfig } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { Layers } from "lucide-react";
 import { useLibrary } from "./hooks/useLibrary.js";
 import { DEFAULT_THEMES } from "./constants/themes.js";
@@ -118,8 +118,11 @@ export default function App() {
   }, []);
 
   const isDownloaded = (gameName) =>
+    !!gameName &&
     completedDownloads.some(
-      (c) => c.gameName === gameName || c.name.includes(gameName),
+      (c) =>
+        c.gameName === gameName ||
+        (c.name && c.name.includes(gameName)),
     );
 
   const handleRemoveFromLibrary = async (gameName) => {
@@ -167,7 +170,7 @@ export default function App() {
           profile={profile}
         />
 
-        <div className="flex-1 relative flex flex-col overflow-hidden rounded-3xl bg-black/30 backdrop-blur-[40px] border border-white/10 shadow-2xl">
+        <div className="flex-1 relative flex flex-col overflow-hidden rounded-3xl bg-black/30 backdrop-blur-2xl border border-white/10 shadow-2xl">
           <TopBar
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
@@ -185,81 +188,92 @@ export default function App() {
           />
 
           <div className="flex-1 overflow-y-auto relative no-scrollbar">
-            {currentView === "profile" && (
-              <ProfileSettings
-                profile={profile}
-                setProfile={setProfile}
-                currentTheme={currentTheme}
-                setCurrentTheme={setCurrentTheme}
-                themes={themes}
-                setThemes={setThemes}
-                setToast={setToast}
-              />
-            )}
-            {currentView === "library" && (
-              <LibraryView
-                library={library}
-                currentTheme={currentTheme}
-                openGame={(game) => setSelectedGame(game)}
-                onRemove={handleRemoveFromLibrary}
-                runningGames={runningGames}
-              />
-            )}
-            {currentView === "wishlist" && (
-              <Wishlist
-                wishlist={wishlist}
-                currentTheme={currentTheme}
-                setCurrentView={setCurrentView}
-                openGame={setSelectedGame}
-              />
-            )}
-            {currentView === "downloads" && (
-              <DownloadsView
-                activeDownloads={activeDownloads}
-                completedDownloads={completedDownloads}
-                setCompletedDownloads={setCompletedDownloads}
-                currentTheme={currentTheme}
-              />
-            )}
-
-            {currentView === "browse" && (
-              <div className="p-8">
-                {extensions.length === 0 ? (
-                  <div className="h-[60vh] flex flex-col items-center justify-center text-gray-500">
-                    <Layers
-                      size={80}
-                      className={`mb-6 opacity-40 ${currentTheme.iconColor}`}
-                    />
-                    <h2 className="text-2xl font-black mb-2 text-white tracking-widest">
-                      NO SOURCES FOUND
-                    </h2>
-                    <p className="text-sm font-medium">
-                      Please install an extension via the sidebar to load games.
-                    </p>
-                  </div>
-                ) : loading ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {[...Array(15)].map((_, i) => (
-                      <div key={i} className="flex flex-col gap-3">
-                        <div className="rounded-2xl aspect-[3/4] skeleton shadow-lg" />
-                        <div className="h-4 skeleton rounded w-3/4 mt-1" />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <GameGrid
-                    games={games}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={currentView}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="h-full"
+              >
+                {currentView === "profile" && (
+                  <ProfileSettings
+                    profile={profile}
+                    setProfile={setProfile}
                     currentTheme={currentTheme}
-                    openGame={setSelectedGame}
-                    activeDownloads={activeDownloads}
-                    isDownloaded={isDownloaded}
-                    hasMore={hasMore}
-                    loadMore={loadMore}
-                    loadingMore={loadingMore}
+                    setCurrentTheme={setCurrentTheme}
+                    themes={themes}
+                    setThemes={setThemes}
+                    setToast={setToast}
                   />
                 )}
-              </div>
-            )}
+                {currentView === "library" && (
+                  <LibraryView
+                    library={library}
+                    currentTheme={currentTheme}
+                    openGame={(game) => setSelectedGame(game)}
+                    onRemove={handleRemoveFromLibrary}
+                    runningGames={runningGames}
+                  />
+                )}
+                {currentView === "wishlist" && (
+                  <Wishlist
+                    wishlist={wishlist}
+                    currentTheme={currentTheme}
+                    setCurrentView={setCurrentView}
+                    openGame={setSelectedGame}
+                  />
+                )}
+                {currentView === "downloads" && (
+                  <DownloadsView
+                    activeDownloads={activeDownloads}
+                    completedDownloads={completedDownloads}
+                    setCompletedDownloads={setCompletedDownloads}
+                    currentTheme={currentTheme}
+                  />
+                )}
+
+                {currentView === "browse" && (
+                  <div className="p-8">
+                    {extensions.length === 0 ? (
+                      <div className="h-[60vh] flex flex-col items-center justify-center text-gray-500">
+                        <Layers
+                          size={80}
+                          className={`mb-6 opacity-40 ${currentTheme.iconColor}`}
+                        />
+                        <h2 className="text-2xl font-black mb-2 text-white tracking-widest">
+                          NO SOURCES FOUND
+                        </h2>
+                        <p className="text-sm font-medium">
+                          Please install an extension via the sidebar to load games.
+                        </p>
+                      </div>
+                    ) : loading ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        {[...Array(15)].map((_, i) => (
+                          <div key={i} className="flex flex-col gap-3">
+                            <div className="rounded-2xl aspect-3/4 skeleton shadow-lg" />
+                            <div className="h-4 skeleton rounded w-3/4 mt-1" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <GameGrid
+                        games={games}
+                        currentTheme={currentTheme}
+                        openGame={setSelectedGame}
+                        activeDownloads={activeDownloads}
+                        isDownloaded={isDownloaded}
+                        hasMore={hasMore}
+                        loadMore={loadMore}
+                        loadingMore={loadingMore}
+                      />
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           <AnimatePresence>
@@ -279,6 +293,7 @@ export default function App() {
                 setLibrary={setLibrary}
                 runningGames={runningGames}
                 setRunningGames={setRunningGames}
+                setToast={setToast}
               />
             )}
           </AnimatePresence>

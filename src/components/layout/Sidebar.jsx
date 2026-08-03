@@ -47,7 +47,8 @@ export default function Sidebar({
       if (exts.length === 1 || !activeExt)
         handleSelectExtension(exts[exts.length - 1]);
     } else {
-      alert("Failed: " + result.message);
+      setToast("Install failed: " + result.message);
+      setTimeout(() => setToast(null), 4000);
     }
     setInstalling(false);
   };
@@ -64,11 +65,11 @@ export default function Sidebar({
               ? { duration: 0 }
               : { type: "spring", bounce: 0, duration: 0.4 }
           }
-          className="bg-black/30 backdrop-blur-[40px] border border-white/10 shadow-2xl rounded-3xl flex flex-col overflow-hidden shrink-0"
+          className="bg-black/30 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl flex flex-col overflow-hidden shrink-0"
         >
           <div className="p-6 border-b border-white/5 bg-black/20 group cursor-default">
             <h2
-              className={`text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.textGradient}`}
+              className={`text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
             >
               <PirateIcon
                 className={`${currentTheme.iconColor} transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110`}

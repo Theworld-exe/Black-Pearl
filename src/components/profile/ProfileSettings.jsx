@@ -40,14 +40,14 @@ export default function ProfileSettings({ profile, setProfile, currentTheme }) {
   return (
     <div className="p-12 max-w-4xl mx-auto w-full flex flex-col gap-8">
       <h2
-        className={`text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r ${currentTheme.textGradient}`}
+        className={`text-4xl font-black bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
       >
         Profile Settings
       </h2>
 
-      <div className="bg-black/40 backdrop-blur-[80px] border border-white/10 p-10 rounded-3xl flex flex-col items-center gap-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-black/40 backdrop-blur-3xl border border-white/10 p-10 rounded-3xl flex flex-col items-center gap-8 shadow-2xl relative overflow-hidden">
         <div
-          className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${currentTheme.textGradient}`}
+          className={`absolute top-0 left-0 w-full h-1.5 bg-linear-to-r ${currentTheme.textGradient}`}
         />
         <div className="relative group cursor-pointer">
           <div className="w-40 h-40 rounded-full bg-black/60 border-4 border-white/10 overflow-hidden shadow-2xl">
@@ -89,7 +89,7 @@ export default function ProfileSettings({ profile, setProfile, currentTheme }) {
 
       <div className="bg-black/40 p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden flex flex-col justify-center">
         <div
-          className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${currentTheme.textGradient}`}
+          className={`absolute top-0 left-0 w-1.5 h-full bg-linear-to-b ${currentTheme.textGradient}`}
         />
         <label
           className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${currentTheme.iconColor}`}
@@ -114,7 +114,7 @@ export default function ProfileSettings({ profile, setProfile, currentTheme }) {
 
       <div className="bg-black/40 p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden flex flex-col justify-center">
         <div
-          className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${currentTheme.textGradient}`}
+          className={`absolute top-0 left-0 w-1.5 h-full bg-linear-to-b ${currentTheme.textGradient}`}
         />
         <div className="flex items-center justify-between">
           <div>
