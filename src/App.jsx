@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import { Layers } from "lucide-react";
+import { Layers, Gamepad2 } from "lucide-react";
 import { useLibrary } from "./hooks/useLibrary.js";
+import { useGamepadNavigation } from "./hooks/useGamepadNavigation.js";
 import { DEFAULT_THEMES } from "./constants/themes.js";
 import Sidebar from "./components/layout/Sidebar.jsx";
 import TopBar from "./components/layout/TopBar.jsx";
 import GameGrid from "./components/library/GameGrid.jsx";
 import GameDetail from "./components/library/GameDetail.jsx";
 import DownloadToast from "./components/downloads/DownloadToast.jsx";
+import AchievementToast from "./components/common/AchievementToast.jsx";
 import DownloadsView from "./components/downloads/DownloadsView.jsx";
 import Wishlist from "./components/library/Wishlist.jsx";
 import LibraryView from "./components/library/LibraryView.jsx";
@@ -68,6 +70,12 @@ export default function App() {
     clearCache,
   } = useLibrary(activeExt, capabilities, setCurrentView);
 
+  const { isConnected: isGamepadConnected } = useGamepadNavigation({
+    activeTab: currentView,
+    setActiveTab: setCurrentView,
+    setToast,
+  });
+
   useEffect(() => {
     if (window.api) {
       window.api.getExtensions().then((exts) => {
@@ -97,6 +105,17 @@ export default function App() {
         setTimeout(() => setToast(null), 5000);
       });
 
+      if (window.api.onExtractComplete) {
+        window.api.onExtractComplete((data) => {
+          setToast(`Extracted & Ready to Play: ${data.gameName} 🎮`);
+          setTimeout(() => setToast(null), 6000);
+          window.api.getDB().then((db) => {
+            setLibrary(db.library || []);
+            setCompletedDownloads(db.completedDownloads || []);
+          });
+        });
+      }
+
       window.api.onGameStarted((gameName) => {
         setRunningGames((prev) => {
           const next = new Set(prev);
@@ -105,10 +124,16 @@ export default function App() {
         });
       });
 
-      window.api.onGameExited((gameName) => {
+      window.api.onGameExited((payload) => {
+        const gameName = typeof payload === "string" ? payload : payload?.gameName;
+        if (payload?.library) {
+          setLibrary(payload.library);
+        } else {
+          window.api.getDB().then((db) => setLibrary(db.library || []));
+        }
         setRunningGames((prev) => {
           const next = new Set(prev);
-          next.delete(gameName);
+          if (gameName) next.delete(gameName);
           return next;
         });
       });
@@ -149,6 +174,8 @@ export default function App() {
           setSelectedGame={setSelectedGame}
           currentTheme={currentTheme}
         />
+
+        <AchievementToast currentTheme={currentTheme} />
 
         <Sidebar
           sidebarOpen={sidebarOpen}
@@ -211,10 +238,12 @@ export default function App() {
                 {currentView === "library" && (
                   <LibraryView
                     library={library}
+                    setLibrary={setLibrary}
                     currentTheme={currentTheme}
                     openGame={(game) => setSelectedGame(game)}
                     onRemove={handleRemoveFromLibrary}
                     runningGames={runningGames}
+                    setToast={setToast}
                   />
                 )}
                 {currentView === "wishlist" && (
@@ -295,6 +324,27 @@ export default function App() {
                 setRunningGames={setRunningGames}
                 setToast={setToast}
               />
+            )}
+          </AnimatePresence>
+
+          {/* Floating Gamepad Active Status Pill */}
+          <AnimatePresence>
+            {isGamepadConnected && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="absolute bottom-4 right-6 z-50 flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/15 text-[11px] font-bold text-gray-300 shadow-2xl pointer-events-none"
+              >
+                <Gamepad2 size={15} className="text-green-400 animate-pulse" />
+                <span className="text-white">Controller Connected</span>
+                <span className="text-gray-500 font-normal">|</span>
+                <span className="text-gray-400">
+                  <span className="font-bold text-gray-200">LB/RB</span> Tabs •{" "}
+                  <span className="font-bold text-green-400">A</span> Select •{" "}
+                  <span className="font-bold text-red-400">B</span> Back
+                </span>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

@@ -1,13 +1,20 @@
 const gofile = require("./providers/gofile");
 const mediafire = require("./providers/mediafire");
-const googleDrive = require("./providers/googleDrive");
+const googledrive = require("./providers/googledrive");
 const buzzheavier = require("./providers/buzzheavier");
 const datanodes = require("./providers/datanodes");
 const fuckingfast = require("./providers/fuckingfast");
-const googledrive = require("./providers/googledrive"); 
 const pixeldrain = require("./providers/pixeldrain");
 
-const providers = [gofile, mediafire, googleDrive, buzzheavier, pixeldrain];
+const providers = [
+  gofile,
+  mediafire,
+  googledrive,
+  buzzheavier,
+  datanodes,
+  fuckingfast,
+  pixeldrain,
+];
 
 async function scrapeDirectLink(url) {
   console.log(`[Scraper] Attempting to scrape direct link from: ${url}`);

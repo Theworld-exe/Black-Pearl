@@ -3,12 +3,15 @@ const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const net = require("net");
+const crypto = require("crypto");
 const Aria2 = require("aria2").default || require("aria2");
 const { getDB, saveDB } = require("./database");
 const { scrapeDirectLink } = require("./scrapers/manager");
+const { unrestrictLink, unrestrictMagnet } = require("./debrid");
 
 let aria2Process;
 let aria2;
+let aria2Secret = "";
 const activeGameMap = new Map();
 
 // --- DYNAMIC PORT SCANNER ---
@@ -60,11 +63,13 @@ async function startAria2() {
     const freePort = await findFreePort(6800);
     console.log(`[ARIA2] Found free port: ${freePort}`);
 
+    aria2Secret = crypto.randomBytes(16).toString("hex");
+
     aria2 = new Aria2({
       host: "127.0.0.1",
       port: freePort,
       secure: false,
-      secret: "",
+      secret: aria2Secret,
     });
 
     aria2Process = spawn(
@@ -73,6 +78,7 @@ async function startAria2() {
         "--enable-rpc",
         "--rpc-listen-all=false",
         `--rpc-listen-port=${freePort}`,
+        `--rpc-secret=${aria2Secret}`,
         "--max-connection-per-server=16",
         "--split=32",
         "--continue=true",
@@ -99,6 +105,21 @@ async function connectAria2(maxRetries = 15) {
     try {
       await aria2.open();
       console.log(`[ARIA2] Connected successfully on port ${aria2.port}`);
+
+      // Apply saved speed limits from profile
+      const db = getDB();
+      if (db.profile?.speedLimits) {
+        const { downloadLimit, uploadLimit } = db.profile.speedLimits;
+        if (downloadLimit || uploadLimit) {
+          aria2
+            .call("changeGlobalOption", {
+              "max-overall-download-limit": String(downloadLimit || "0"),
+              "max-overall-upload-limit": String(uploadLimit || "0"),
+            })
+            .catch(() => {});
+        }
+      }
+
       return true;
     } catch (err) {
       await new Promise((r) => setTimeout(r, 1000));
@@ -106,6 +127,42 @@ async function connectAria2(maxRetries = 15) {
   }
   console.error("[ARIA2] Failed to connect after all retries");
   return false;
+}
+
+async function setAria2SpeedLimits(downloadLimit = "0", uploadLimit = "0") {
+  if (!aria2) return { success: false, message: "Aria2 not running" };
+  try {
+    const options = {
+      "max-overall-download-limit": String(downloadLimit || "0"),
+      "max-overall-upload-limit": String(uploadLimit || "0"),
+    };
+    await aria2.call("changeGlobalOption", options);
+    const db = getDB();
+    if (!db.profile) db.profile = {};
+    db.profile.speedLimits = { downloadLimit, uploadLimit };
+    saveDB(db);
+    return { success: true, downloadLimit, uploadLimit };
+  } catch (err) {
+    console.error("[ARIA2] Set speed limits error:", err);
+    return { success: false, message: err.message };
+  }
+}
+
+async function getAria2SpeedLimits() {
+  if (!aria2) {
+    const db = getDB();
+    return db.profile?.speedLimits || { downloadLimit: "0", uploadLimit: "0" };
+  }
+  try {
+    const opts = await aria2.call("getGlobalOption");
+    return {
+      downloadLimit: opts["max-overall-download-limit"] || "0",
+      uploadLimit: opts["max-overall-upload-limit"] || "0",
+    };
+  } catch (err) {
+    const db = getDB();
+    return db.profile?.speedLimits || { downloadLimit: "0", uploadLimit: "0" };
+  }
 }
 
 function startPolling(getMainWindow) {
@@ -144,13 +201,102 @@ function startPolling(getMainWindow) {
           const gameName = activeGameMap.get(c.gid) || fileName;
 
           if (!db.completedDownloads.find((x) => x.gid === c.gid)) {
-            db.completedDownloads.push({
+            const completedItem = {
               gid: c.gid,
               name: fileName,
               gameName,
               date: new Date().toISOString(),
-            });
+            };
+            db.completedDownloads.push(completedItem);
             updated = true;
+
+            // Trigger auto-extract if enabled in profile (defaults to true)
+            if (db.profile?.autoExtract !== false) {
+              const dlPath = db.profile?.downloadPath || app.getPath("downloads");
+              const fullFilePath = c.files[0]?.path || path.join(dlPath, fileName);
+              const { extractArchive, isArchive, sanitizeFolderName } = require("./extractor");
+              const { findPrimaryExecutable, resolveSteamMetadata } = require("./gameScanner");
+
+              if (isArchive(fullFilePath) || isArchive(fileName)) {
+                console.log(`[AutoExtract] Starting automatic extraction for: ${gameName}`);
+                const cleanTitle = sanitizeFolderName(gameName);
+                const targetGameDir = path.join(dlPath, cleanTitle);
+
+                extractArchive(
+                  fullFilePath,
+                  targetGameDir,
+                  (status) => {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                      mainWindow.webContents.send("extract-progress", {
+                        filePath: fullFilePath,
+                        gameName,
+                        status,
+                      });
+                    }
+                  },
+                  {
+                    gameName: cleanTitle,
+                    autoDelete: true,
+                    mainGamesDir: dlPath,
+                  },
+                ).then(async (res) => {
+                  if (res.success) {
+                    console.log(`[AutoExtract] Successfully extracted ${gameName} to ${res.extractedPath}`);
+                    completedItem.extractedPath = res.extractedPath;
+
+                    // Automatically link primary executable and register to Library
+                    const primaryExe =
+                      findPrimaryExecutable(res.extractedPath, cleanTitle) ||
+                      (res.executables && res.executables[0]?.path);
+
+                    if (primaryExe) {
+                      let currentDB = getDB();
+                      const meta = await resolveSteamMetadata(cleanTitle);
+                      const existing = currentDB.library.find(
+                        (g) =>
+                          g.name.toLowerCase() === cleanTitle.toLowerCase() ||
+                          g.name.toLowerCase() === gameName.toLowerCase(),
+                      );
+                      if (!existing) {
+                        currentDB.library.push({
+                          name: cleanTitle,
+                          clean_name: cleanTitle,
+                          thumbnail_link: meta.thumbnail_link,
+                          steamAppId: meta.steamAppId || null,
+                          categories: meta.categories || ["PC Game"],
+                          exePath: primaryExe,
+                          launchParams: "",
+                          playtimeSeconds: 0,
+                          lastPlayed: null,
+                          addedDate: new Date().toISOString(),
+                        });
+                        saveDB(currentDB);
+                        console.log(
+                          `[AutoExtract] Added ${cleanTitle} to user Library with exe: ${primaryExe}`,
+                        );
+                      } else if (!existing.exePath) {
+                        existing.exePath = primaryExe;
+                        saveDB(currentDB);
+                      }
+                    }
+
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                      mainWindow.webContents.send("extract-complete", {
+                        gameName,
+                        extractedPath: res.extractedPath,
+                        exePath: primaryExe,
+                        deletedFiles: res.deletedFiles,
+                      });
+                    }
+                  } else {
+                    console.warn(
+                      `[AutoExtract] Extraction failed for ${fileName}:`,
+                      res.message,
+                    );
+                  }
+                }).catch((err) => console.error("[AutoExtract] Error:", err));
+              }
+            }
           }
 
           try {
@@ -190,6 +336,10 @@ function startPolling(getMainWindow) {
             status: d.status,
             files: files,
             isTorrent: !!d.bittorrent,
+            numSeeders: Number(d.numSeeders || 0),
+            connections: Number(d.connections || 0),
+            uploadSpeed: Number(d.uploadSpeed || 0),
+            uploadLength: Number(d.uploadLength || 0),
           };
         }),
       );
@@ -222,12 +372,70 @@ function setupAria2IPC(ipcMain, getAdBlocker) {
     }
   });
 
+  ipcMain.handle("set-speed-limits", async (e, { downloadLimit, uploadLimit }) => {
+    return await setAria2SpeedLimits(downloadLimit, uploadLimit);
+  });
+
+  ipcMain.handle("get-speed-limits", async () => {
+    return await getAria2SpeedLimits();
+  });
+
   ipcMain.on("start-smart-download", async (event, hostUrl, gameName) => {
     const db = getDB();
+    const debrid = db.profile?.debrid;
 
-    // REMOVED MULTIPART: Ensure it's treated strictly as a single string link
+    // Treat hostUrl as a single string link
     const currentUrl = Array.isArray(hostUrl) ? hostUrl[0] : hostUrl;
 
+    // ── 1. DEBRID FAST-PATH (If enabled & API key configured) ─────────────────
+    if (debrid?.enabled && debrid?.apiKey) {
+      if (currentUrl.startsWith("magnet:")) {
+        console.log(`[Debrid] Attempting to unrestrict magnet via ${debrid.provider}...`);
+        try {
+          const debridRes = await unrestrictMagnet(debrid.provider, debrid.apiKey, currentUrl);
+          if (debridRes) {
+            const links = Array.isArray(debridRes) ? debridRes : [debridRes];
+            for (const item of links) {
+              const fileName = item.filename || item.url.split("?")[0].split("/").pop() || "game_download";
+              const gid = await aria2.call("addUri", [item.url], {
+                dir: db.profile.downloadPath || app.getPath("downloads"),
+                out: `[BlackPearl] ${fileName}`,
+              });
+              activeGameMap.set(gid, gameName);
+            }
+            event.sender.send("download-started", {
+              gameName,
+              fileName: `[${debrid.provider.toUpperCase()}] Fast Stream`,
+            });
+            return;
+          }
+        } catch (err) {
+          console.error("[Debrid] Magnet unrestrict failed, falling back:", err);
+        }
+      } else {
+        console.log(`[Debrid] Attempting to unrestrict host link via ${debrid.provider}...`);
+        try {
+          const debridRes = await unrestrictLink(debrid.provider, debrid.apiKey, currentUrl);
+          if (debridRes && debridRes.url) {
+            const fileName = debridRes.filename || debridRes.url.split("?")[0].split("/").pop() || "game_download";
+            const gid = await aria2.call("addUri", [debridRes.url], {
+              dir: db.profile.downloadPath || app.getPath("downloads"),
+              out: `[BlackPearl] ${fileName}`,
+            });
+            activeGameMap.set(gid, gameName);
+            event.sender.send("download-started", {
+              gameName,
+              fileName: `[${debrid.provider.toUpperCase()}] ${fileName}`,
+            });
+            return;
+          }
+        } catch (err) {
+          console.error("[Debrid] Link unrestrict failed, falling back:", err);
+        }
+      }
+    }
+
+    // ── 2. NATIVE MAGNET / TORRENT HANDLER ────────────────────────────────────
     if (currentUrl.startsWith("magnet:")) {
       try {
         const gid = await aria2.call("addUri", [currentUrl], {
@@ -244,6 +452,7 @@ function setupAria2IPC(ipcMain, getAdBlocker) {
       return;
     }
 
+    // ── 3. NATIVE DIRECT SCRAPERS ─────────────────────────────────────────────
     const scrapeResult = await scrapeDirectLink(currentUrl);
     if (scrapeResult) {
       let targetUrl = "";
@@ -380,6 +589,13 @@ function setupAria2IPC(ipcMain, getAdBlocker) {
   });
 }
 
+async function call(method, ...params) {
+  if (!aria2) {
+    throw new Error("Aria2 RPC client is not initialized");
+  }
+  return await aria2.call(method, ...params);
+}
+
 function killAria2() {
   if (aria2Process) aria2Process.kill();
 }
@@ -390,4 +606,7 @@ module.exports = {
   startPolling,
   setupAria2IPC,
   killAria2,
+  setAria2SpeedLimits,
+  getAria2SpeedLimits,
+  call,
 };

@@ -40,7 +40,7 @@ export function useLibrary(activeExt, capabilities, setCurrentView) {
     });
 
     // End-of-stream callback
-    window.api.onStreamEnd(({ total, hasMore: more, error }) => {
+    window.api.onStreamEnd(({ hasMore: more, error }) => {
       if (streamSessionRef.current !== sessionId) return;
 
       setStreaming(false);

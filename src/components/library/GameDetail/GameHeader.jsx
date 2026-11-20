@@ -1,13 +1,17 @@
 import { motion } from "framer-motion";
-import { CheckCircle, PenTool, Layers, Calendar, HardDrive, Star, Tag, Info } from "lucide-react";
+import { CheckCircle, PenTool, Layers, Calendar, HardDrive, Star, Tag, Info, Clock } from "lucide-react";
+import { formatPlaytime, formatLastPlayed } from "../../../utils/helpers";
 
-export default function GameHeader({ selectedGame, steamData, currentTheme, isDownloaded }) {
+export default function GameHeader({ selectedGame, libraryEntry, steamData, currentTheme, isDownloaded }) {
   const getCategories = () => {
     if (!selectedGame.categories) return [];
     if (Array.isArray(selectedGame.categories)) return selectedGame.categories;
     if (typeof selectedGame.categories === 'string') return selectedGame.categories.split(',').map(s => s.trim());
     return [];
   };
+
+  const playtimeSeconds = libraryEntry?.playtimeSeconds || selectedGame?.playtimeSeconds || 0;
+  const lastPlayed = libraryEntry?.lastPlayed || selectedGame?.lastPlayed || null;
 
   return (
     <div className="relative pb-12 px-12 shrink-0 w-full min-h-[55vh] flex flex-col justify-end transition-all duration-300 pt-32">
@@ -37,6 +41,18 @@ export default function GameHeader({ selectedGame, steamData, currentTheme, isDo
           </motion.h1>
 
           <div className="flex flex-wrap items-center gap-x-12 gap-y-4 pt-4 border-t border-white/10 w-full">
+            {playtimeSeconds > 0 && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest flex items-center gap-1.5"><Clock size={12} className={currentTheme.iconColor} /> Playtime</span>
+                <span className="text-sm font-bold text-gray-200">{formatPlaytime(playtimeSeconds)}</span>
+              </div>
+            )}
+            {lastPlayed && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest flex items-center gap-1.5"><Calendar size={12} className={currentTheme.iconColor} /> Last Played</span>
+                <span className="text-sm font-bold text-gray-200">{formatLastPlayed(lastPlayed)}</span>
+              </div>
+            )}
             {steamData?.developers && (
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest flex items-center gap-1.5"><PenTool size={12} className={currentTheme.iconColor} /> Developer</span>

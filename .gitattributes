@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.exe binary
+aria2c binary
+*.png binary
+*.ico binary

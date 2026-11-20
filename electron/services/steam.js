@@ -56,4 +56,8 @@ function setupSteamIPC(ipcMain) {
   });
 }
 
-module.exports = { loadSteamCache, setupSteamIPC };
+function getSteamCache() {
+  return Object.fromEntries(steamCache);
+}
+
+module.exports = { loadSteamCache, setupSteamIPC, getSteamCache };

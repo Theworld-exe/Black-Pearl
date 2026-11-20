@@ -1,12 +1,12 @@
 // src/components/layout/Sidebar.jsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Palette } from "lucide-react";
+import { Palette, Settings2 } from "lucide-react";
 import PirateIcon from "../icons/PirateIcon";
+import ExtensionManagerModal from "./ExtensionManagerModal";
 
 export default function Sidebar({
   sidebarOpen,
-  setSidebarOpen,
   currentTheme,
   setCurrentTheme,
   themes,
@@ -25,6 +25,7 @@ export default function Sidebar({
 }) {
   const [installUrl, setInstallUrl] = useState("");
   const [installing, setInstalling] = useState(false);
+  const [managerOpen, setManagerOpen] = useState(false);
 
   const handleInstallExtension = async () => {
     if (!installUrl.trim()) return;
@@ -54,48 +55,69 @@ export default function Sidebar({
   };
 
   return (
-    <AnimatePresence initial={false}>
-      {sidebarOpen && (
-        <motion.div
-          initial={{ width: 0, opacity: 0, marginLeft: -12 }}
-          animate={{ width: 256, opacity: 1, marginLeft: 0 }}
-          exit={{ width: 0, opacity: 0, marginLeft: -12 }}
-          transition={
-            profile?.liteMode
-              ? { duration: 0 }
-              : { type: "spring", bounce: 0, duration: 0.4 }
-          }
-          className="bg-black/30 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl flex flex-col overflow-hidden shrink-0"
-        >
-          <div className="p-6 border-b border-white/5 bg-black/20 group cursor-default">
-            <h2
-              className={`text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
-            >
-              <PirateIcon
-                className={`${currentTheme.iconColor} transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110`}
-                size={28}
-              />{" "}
-              Black Pearl
-            </h2>
-          </div>
+    <>
+      <ExtensionManagerModal
+        isOpen={managerOpen}
+        onClose={() => setManagerOpen(false)}
+        currentTheme={currentTheme}
+        extensions={extensions}
+        setExtensions={setExtensions}
+        activeExt={activeExt}
+        handleSelectExtension={handleSelectExtension}
+        setToast={setToast}
+      />
 
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1 no-scrollbar">
-            <p
-              className={`text-xs font-bold mb-2 uppercase tracking-widest ${currentTheme.iconColor}`}
-            >
-              Extensions
-            </p>
-            <select
-              className="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 mb-2 text-sm outline-none text-gray-100"
-              value={activeExt}
-              onChange={(e) => handleSelectExtension(e.target.value)}
-            >
-              {extensions.map((ext) => (
-                <option key={ext} value={ext} className="bg-slate-900">
-                  {ext}
-                </option>
-              ))}
-            </select>
+      <AnimatePresence initial={false}>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ width: 0, opacity: 0, marginLeft: -12 }}
+            animate={{ width: 256, opacity: 1, marginLeft: 0 }}
+            exit={{ width: 0, opacity: 0, marginLeft: -12 }}
+            transition={
+              profile?.liteMode
+                ? { duration: 0 }
+                : { type: "spring", bounce: 0, duration: 0.4 }
+            }
+            className="bg-black/30 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl flex flex-col overflow-hidden shrink-0"
+          >
+            <div className="p-6 border-b border-white/5 bg-black/20 group cursor-default">
+              <h2
+                className={`text-2xl font-black flex items-center gap-3 bg-clip-text text-transparent bg-linear-to-r ${currentTheme.textGradient}`}
+              >
+                <PirateIcon
+                  className={`${currentTheme.iconColor} transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110`}
+                  size={28}
+                />{" "}
+                Black Pearl
+              </h2>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1 no-scrollbar">
+              <div className="flex items-center justify-between mb-2">
+                <p
+                  className={`text-xs font-bold uppercase tracking-widest ${currentTheme.iconColor}`}
+                >
+                  Extensions
+                </p>
+                <button
+                  onClick={() => setManagerOpen(true)}
+                  className="text-gray-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors"
+                  title="Manage Extensions"
+                >
+                  <Settings2 size={14} />
+                </button>
+              </div>
+              <select
+                className="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 mb-2 text-sm outline-none text-gray-100"
+                value={activeExt}
+                onChange={(e) => handleSelectExtension(e.target.value)}
+              >
+                {extensions.map((ext) => (
+                  <option key={ext} value={ext} className="bg-slate-900">
+                    {ext}
+                  </option>
+                ))}
+              </select>
 
             <div className="bg-black/40 rounded-xl p-3 mb-6 border border-white/5 w-full box-border">
               <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-bold">
@@ -157,5 +179,6 @@ export default function Sidebar({
         </motion.div>
       )}
     </AnimatePresence>
-  );
+  </>
+);
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import TopNav from "./GameDetail/TopNav";
 import GameHeader from "./GameDetail/GameHeader";
 import MediaGallery from "./GameDetail/MediaGallery";
 import SystemReqs from "./GameDetail/SystemReqs";
 import GameSidebar from "./GameDetail/GameSidebar";
+import AchievementsSection from "./GameDetail/AchievementsSection";
 
 export default function GameDetail({
   selectedGame,
@@ -21,7 +22,6 @@ export default function GameDetail({
   library,
   setLibrary,
   runningGames,
-  setRunningGames,
   setToast,
 }) {
   const [steamData, setSteamData] = useState(null);
@@ -165,6 +165,7 @@ export default function GameDetail({
 
       <GameHeader
         selectedGame={selectedGame}
+        libraryEntry={libraryEntry}
         steamData={steamData}
         currentTheme={currentTheme}
         isDownloaded={isDownloaded}
@@ -177,12 +178,20 @@ export default function GameDetail({
       />
 
       <div className="relative z-10 bg-[#030303] flex-1 w-full">
-        <div className="max-w-[1400px] mx-auto w-full px-12 py-12 flex gap-12">
-          <SystemReqs
-            steamData={steamData}
-            steamLoading={steamLoading}
-            currentTheme={currentTheme}
-          />
+        <div className="max-w-[1400px] mx-auto w-full px-12 py-12 flex flex-col lg:flex-row gap-12">
+          <div className="flex-1 flex flex-col">
+            <SystemReqs
+              steamData={steamData}
+              steamLoading={steamLoading}
+              currentTheme={currentTheme}
+            />
+            <AchievementsSection
+              selectedGame={selectedGame}
+              steamData={steamData}
+              currentTheme={currentTheme}
+              setToast={setToast}
+            />
+          </div>
 
           <GameSidebar
             selectedGame={selectedGame}
@@ -200,6 +209,7 @@ export default function GameDetail({
             handleKillGame={handleKillGame}
             handleDownload={handleDownload}
             setLibrary={setLibrary}
+            setToast={setToast}
           />
         </div>
       </div>
